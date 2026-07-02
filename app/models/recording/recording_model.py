@@ -83,6 +83,7 @@ class Recording:
         self.use_proxy = None
         self.record_url = None
         self.preview_url = None
+        self.speech_to_text_status = None
 
     def to_dict(self):
         """Convert the Recording instance to a dictionary for saving."""

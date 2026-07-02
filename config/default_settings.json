@@ -21,6 +21,7 @@
     "convert_to_mp4": true,
     "delete_original": false,
     "generate_time_subtitle_file": false,
+    "speech_to_text_enabled": false,
     "execute_custom_script": false,
     "custom_script_command": "",
     "default_platform_with_proxy": "tiktok, sooplive, pandalive, winktv, flextv, popkontv, twitch, liveme, showroom, chzzk, shopee, shp, youtu, youtube, lang",

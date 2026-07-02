@@ -138,7 +138,8 @@
   },
   "stream_manager": {
     "record_stream_error": "直播源录制出错",
-    "no_ffmpeg_tip": "未安装FFmpeg，请先安装FFmpeg ⚠️"
+    "no_ffmpeg_tip": "未安装FFmpeg，请先安装FFmpeg ⚠️",
+    "speech_to_text_missing_dependency": "未安装 faster-whisper，无法提取文本。请执行: pip install faster-whisper"
   },
   "recording_card": {
     "stop_monitor_tip": "提示：已停止直播监控👁️",
@@ -188,7 +189,10 @@
     "offline": "未开播",
     "no_monitor": "未监控",
     "checking": "检测中",
-    "live_room": "直播间"
+    "live_room": "直播间",
+    "speech_to_text_processing": "文本提取中...",
+    "speech_to_text_completed": "文本已提取",
+    "speech_to_text_failed": "文本提取失败"
   },
   "settings_page": {
     "recording_settings": "录制设置",
@@ -234,6 +238,8 @@
     "convert_mp4": "录制完成后转为mp4格式",
     "delete_original": "追加格式后删除原文件",
     "generate_timestamps_subtitle": "生成时间字幕文件",
+    "speech_to_text_enabled": "录制完成后提取文本",
+    "speech_to_text_enabled_tip": "开启后将在录制完成时自动将音频内容转为文本，并保存为同名的 .txt 文件",
     "custom_script": "录制完成后执行自定义脚本",
     "script_command": "自定义脚本执行命令",
     "default_platform_with_proxy": "默认使用代理录制的平台",

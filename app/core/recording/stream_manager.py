@@ -9,10 +9,11 @@ from typing import TypeVar
 
 from ...messages import desktop_notify, message_pusher
 from ...models.media.video_quality_model import VideoQuality
-from ...models.recording.recording_status_model import RecordingStatus
+from ...models.recording.recording_status_model import RecordingStatus, SpeechToTextStatus
 from ...utils import utils
 from ...utils.logger import logger
 from ..media import ffmpeg_builders
+from ..media.speech_to_text import collect_recording_output_files, transcribe_and_save
 from ..media.direct_downloader import DirectStreamDownloader
 from ..platforms import platform_handlers
 from ..platforms.platform_handlers import StreamData
@@ -438,7 +439,10 @@ class LiveStreamRecorder:
                 if not self.recording.manually_stopped:
                     await self.recheck_live_status()
 
-                if self.user_config.get("convert_to_mp4") and self.save_format == "ts":
+                if self.user_config.get("speech_to_text_enabled"):
+                    await self._maybe_convert_ts_to_mp4(save_file_path)
+                    await self._run_speech_to_text(save_file_path)
+                elif self.user_config.get("convert_to_mp4") and self.save_format == "ts":
                     if self.segment_record:
                         file_paths = utils.get_file_paths(os.path.dirname(save_file_path))
                         prefix = os.path.basename(save_file_path).rsplit("_", maxsplit=1)[0]
@@ -570,6 +574,78 @@ class LiveStreamRecorder:
             logger.error(f"Error occurred during conversion: {e}")
         except Exception as e:
             logger.error(f"An unknown error occurred: {e}")
+
+    async def _maybe_convert_ts_to_mp4(self, save_file_path: str) -> None:
+        if not (self.user_config.get("convert_to_mp4") and self.save_format == "ts"):
+            return
+
+        delete_original = self.user_config.get("delete_original", False)
+        if self.segment_record:
+            for path in collect_recording_output_files(save_file_path):
+                await self.converts_mp4(path, delete_original)
+        else:
+            await self.converts_mp4(save_file_path, delete_original)
+
+    async def _run_speech_to_text(self, save_file_path: str) -> None:
+        if not self.user_config.get("speech_to_text_enabled"):
+            return
+
+        if not self.services.recording_enabled:
+            logger.info(f"Application is closing, adding speech-to-text task to background service: {save_file_path}")
+            BackgroundService.get_instance().add_task(self.run_speech_to_text_sync, save_file_path)
+            return
+
+        await self._do_speech_to_text(save_file_path)
+
+    def run_speech_to_text_sync(self, save_file_path: str) -> None:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(self._do_speech_to_text(save_file_path))
+        finally:
+            loop.close()
+
+    async def _do_speech_to_text(self, save_file_path: str) -> None:
+        prefer_mp4 = self.user_config.get("convert_to_mp4") and self.save_format == "ts"
+        media_files = collect_recording_output_files(save_file_path, prefer_mp4=prefer_mp4)
+        if not media_files:
+            logger.warning(f"No recorded files found for speech-to-text: {save_file_path}")
+            return
+
+        try:
+            import faster_whisper  # noqa: F401
+        except ImportError:
+            logger.error(self._["speech_to_text_missing_dependency"])
+            self._set_speech_to_text_status(SpeechToTextStatus.FAILED)
+            return
+
+        self._set_speech_to_text_status(SpeechToTextStatus.PROCESSING)
+        success_count = 0
+        fail_count = 0
+
+        for media_path in media_files:
+            try:
+                result = await asyncio.to_thread(transcribe_and_save, media_path)
+                if result:
+                    success_count += 1
+                else:
+                    fail_count += 1
+            except Exception as e:
+                fail_count += 1
+                logger.error(f"Failed to extract text from {media_path}: {e}")
+
+        if success_count > 0:
+            self._set_speech_to_text_status(SpeechToTextStatus.COMPLETED)
+        else:
+            self._set_speech_to_text_status(SpeechToTextStatus.FAILED)
+
+    def _set_speech_to_text_status(self, status: str | None) -> None:
+        self.recording.speech_to_text_status = status
+        try:
+            self.services.broadcast_card_update(self.recording)
+            self.services.broadcast_pubsub("update", self.recording)
+        except Exception as e:
+            logger.debug(f"Failed to update speech-to-text status: {e}")
 
     async def custom_script_execute(
         self,
@@ -718,6 +794,9 @@ class LiveStreamRecorder:
                 self.services.run_coro(self.stop_recording_notify())
 
             await self.recheck_live_status()
+
+            if self.user_config.get("speech_to_text_enabled"):
+                await self._run_speech_to_text(save_file_path)
 
             if self.user_config.get("execute_custom_script") and script_command:
                 logger.info("Prepare to execute custom script in the background")

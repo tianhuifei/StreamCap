@@ -24,6 +24,12 @@ class RecordingStatus:
     LIVE_STATUS_CHECK_ERROR = "LIVE_STATUS_CHECK_ERROR"
     LIVE_BROADCASTING = "LIVE_BROADCASTING"
 
+
+class SpeechToTextStatus:
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
     @classmethod
     def get_status(cls):
         """Get all properties of the RecordingStatus class"""

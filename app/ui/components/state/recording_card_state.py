@@ -1,7 +1,7 @@
 import flet as ft
 
 from ....models.recording.recording_model import Recording
-from ....models.recording.recording_status_model import CardStateType, RecordingStatus
+from ....models.recording.recording_status_model import CardStateType, RecordingStatus, SpeechToTextStatus
 
 
 class RecordingCardState:
@@ -97,3 +97,25 @@ class RecordingCardState:
     @staticmethod
     def get_monitor_icon(recording: Recording) -> ft.IconData:
         return ft.Icons.VISIBILITY if recording.monitor_status else ft.Icons.VISIBILITY_OFF
+
+    @staticmethod
+    def get_speech_to_text_status_config(recording: Recording, language_dict: dict) -> dict | None:
+        status = getattr(recording, "speech_to_text_status", None)
+        if not status:
+            return None
+
+        configs = {
+            SpeechToTextStatus.PROCESSING: {
+                "text": language_dict.get("speech_to_text_processing", "Extracting text..."),
+                "color": ft.Colors.ORANGE,
+            },
+            SpeechToTextStatus.COMPLETED: {
+                "text": language_dict.get("speech_to_text_completed", "Text extracted"),
+                "color": ft.Colors.GREEN,
+            },
+            SpeechToTextStatus.FAILED: {
+                "text": language_dict.get("speech_to_text_failed", "Text extraction failed"),
+                "color": ft.Colors.RED,
+            },
+        }
+        return configs.get(status)

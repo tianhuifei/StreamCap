@@ -451,6 +451,15 @@ class SettingsPage(PageBase):
                             ),
                         ),
                         self.create_setting_row(
+                            self._["speech_to_text_enabled"],
+                            ft.Switch(
+                                value=self.get_config_value("speech_to_text_enabled"),
+                                data="speech_to_text_enabled",
+                                on_change=self.on_change,
+                                tooltip=self._["speech_to_text_enabled_tip"],
+                            ),
+                        ),
+                        self.create_setting_row(
                             self._["custom_script"],
                             ft.Switch(
                                 value=self.get_config_value("execute_custom_script"),

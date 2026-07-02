@@ -138,7 +138,8 @@
   },
     "stream_manager": {
     "record_stream_error": "Live streaming source recording error",
-    "no_ffmpeg_tip": "FFmpeg is not installed, please install FFmpeg first ⚠️"
+    "no_ffmpeg_tip": "FFmpeg is not installed, please install FFmpeg first ⚠️",
+    "speech_to_text_missing_dependency": "faster-whisper is not installed. Run: pip install faster-whisper"
   },
   "recording_card": {
     "stop_monitor_tip": "Tip: Live monitoring has been stopped",
@@ -188,7 +189,10 @@
     "offline": "Offline",
     "no_monitor": "Not Monitored",
     "checking": "Checking",
-    "live_room": "Live Room"
+    "live_room": "Live Room",
+    "speech_to_text_processing": "Extracting text...",
+    "speech_to_text_completed": "Text extracted",
+    "speech_to_text_failed": "Text extraction failed"
   },
   "settings_page": {
     "recording_settings": "Recording Settings",
@@ -234,6 +238,8 @@
     "convert_mp4": "Convert to MP4 After Recording",
     "delete_original": "Delete Original File After Appending Format",
     "generate_timestamps_subtitle": "Generate Timestamp Subtitle",
+    "speech_to_text_enabled": "Extract Text After Recording",
+    "speech_to_text_enabled_tip": "When enabled, automatically transcribes audio to text and saves a .txt file next to the recording",
     "custom_script": "Execute Custom Script After Recording",
     "script_command": "Custom Script Execution Command",
     "default_platform_with_proxy": "Default Platform for Recording with Proxy",

@@ -438,6 +438,7 @@ class RecordingManager:
                     "last_duration": timedelta(),
                     "start_time": datetime.now(),
                     "is_recording": True,
+                    "speech_to_text_status": None,
                 }
             )
             logger.info(f"Started recording for {recording.title}")

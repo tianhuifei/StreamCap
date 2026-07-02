@@ -116,6 +116,9 @@ class RecordingCardManager:
 
         status_label = self.create_status_label(recording)
 
+        speech_to_text_status_slot = ft.Container(visible=False, alignment=ft.alignment.Alignment.CENTER_RIGHT)
+        self._apply_speech_to_text_status(recording, speech_to_text_status_slot, self._)
+
         title_row = ft.Row(
             [display_title_label, status_label] if status_label else [display_title_label],
             alignment=ft.MainAxisAlignment.START,
@@ -123,12 +126,25 @@ class RecordingCardManager:
             tight=True,
         )
 
+        info_row = ft.Row(
+            [
+                ft.Column(
+                    [duration_text_label, speed_text_label],
+                    spacing=2,
+                    tight=True,
+                    expand=True,
+                ),
+                speech_to_text_status_slot,
+            ],
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=8,
+        )
+
         card_container = ft.Container(
             content=ft.Column(
                 [
                     title_row,
-                    duration_text_label,
-                    speed_text_label,
+                    info_row,
                     ft.Row(
                         [
                             record_button,
@@ -166,6 +182,7 @@ class RecordingCardManager:
             "edit_button": edit_button,
             "monitor_button": monitor_button,
             "status_label": status_label,
+            "speech_to_text_status_slot": speech_to_text_status_slot,
         }
 
     def get_card_background_color(self, recording: Recording):
@@ -193,6 +210,33 @@ class RecordingCardManager:
             height=26,
             alignment=ft.alignment.Alignment.CENTER,
         )
+
+    def _apply_speech_to_text_status(
+        self, recording: Recording, slot: ft.Container, language_dict: dict | None = None
+    ) -> None:
+        config = RecordingCardState.get_speech_to_text_status_config(recording, language_dict or self._)
+        if not config:
+            slot.content = None
+            slot.visible = False
+            return
+
+        slot.content = ft.Row(
+            [
+                ft.Icon(ft.Icons.TEXT_SNIPPET, size=14, color=config["color"]),
+                ft.Text(
+                    config["text"],
+                    size=12,
+                    color=config["color"],
+                    weight=ft.FontWeight.W_500,
+                    max_lines=1,
+                    overflow=ft.TextOverflow.ELLIPSIS,
+                    no_wrap=True,
+                ),
+            ],
+            spacing=4,
+            tight=True,
+        )
+        slot.visible = True
 
     async def update_card(self, recording):
         """Update only the recordings cards in the scrollable content area."""
@@ -229,6 +273,8 @@ class RecordingCardManager:
                 if recording_card.get("speed_label"):
                     recording_card["speed_label"].value = recording.speed
 
+                self._update_speech_to_text_status_label(recording, recording_card)
+
                 if recording_card.get("record_button"):
                     recording_card["record_button"].icon = self.get_icon_for_recording_state(recording)
                     recording_card["record_button"].tooltip = self.get_tip_for_recording_state(recording)
@@ -251,6 +297,13 @@ class RecordingCardManager:
                 return
             except Exception as e:
                 logger.debug(f"Update card failed: {e}")
+
+    def _update_speech_to_text_status_label(self, recording: Recording, recording_card: dict) -> None:
+        slot = recording_card.get("speech_to_text_status_slot")
+        if slot is None:
+            return
+
+        self._apply_speech_to_text_status(recording, slot, self._)
 
     async def update_monitor_state(self, recording: Recording):
         """Update the monitor button state based on the current monitoring status."""
