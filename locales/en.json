@@ -148,7 +148,7 @@
     "please_start_monitor_tip": "Tip: Please start live monitoring first",
     "is_not_live_tip": "Tip: The live room is not broadcasting",
     "pre_record_tip": "Tip: Preparing to start recording",
-    "stop_record_tip": "Tip: Live room recording has been stopped",
+    "stop_record_tip": "Tip: Recording and monitoring have been stopped",
     "no_folder_tip": "Tip: The live room folder does not exist",
     "edit_record_config": "Edit Recording Configuration",
     "delete_monitor": "Delete Monitoring",

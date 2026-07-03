@@ -3,7 +3,10 @@ import subprocess
 import tempfile
 from functools import lru_cache
 
+from ... import execute_dir
 from ...utils.logger import logger
+
+WHISPER_MODELS_DIR = os.path.join(execute_dir, "models", "whisper")
 
 AUDIO_EXTENSIONS = {".mp3", ".wav", ".m4a", ".aac", ".wma", ".flac", ".ogg"}
 MEDIA_EXTENSIONS = AUDIO_EXTENSIONS | {".mp4", ".ts", ".mkv", ".mov", ".flv", ".nut"}
@@ -101,7 +104,28 @@ def to_simplified_chinese(text: str) -> str:
         return text
 
 
-@lru_cache(maxsize=1)
+def _get_whisper_device_config() -> tuple[str, str]:
+    try:
+        import ctranslate2
+
+        if ctranslate2.get_cuda_device_count() > 0:
+            return "cuda", "float16"
+    except Exception as e:
+        logger.debug(f"CUDA not available for speech-to-text: {e}")
+    return "cpu", "int8"
+
+
+def _get_local_whisper_model_path(model_name: str) -> str:
+    local_model_dir = os.path.join(WHISPER_MODELS_DIR, model_name)
+    if not os.path.isfile(os.path.join(local_model_dir, "model.bin")):
+        raise FileNotFoundError(
+            f"Local speech-to-text model not found: {local_model_dir}. "
+            f"Download it with: python app/scripts/download_whisper_model.py {model_name}"
+        )
+    return local_model_dir
+
+
+@lru_cache(maxsize=4)
 def _get_whisper_model(model_name: str):
     try:
         from faster_whisper import WhisperModel
@@ -110,21 +134,38 @@ def _get_whisper_model(model_name: str):
             "faster-whisper is not installed. Install it with: pip install faster-whisper"
         ) from e
 
-    logger.info(f"Loading speech-to-text model: {model_name}")
-    return WhisperModel(model_name, device="cpu", compute_type="int8")
+    device, compute_type = _get_whisper_device_config()
+    model_path = _get_local_whisper_model_path(model_name)
+    logger.info(
+        f"Loading speech-to-text model: {model_path} (device={device}, compute_type={compute_type})"
+    )
+    return WhisperModel(model_path, device=device, compute_type=compute_type)
+
+
+def _format_timestamp(seconds: float) -> str:
+    total_seconds = max(0, int(seconds))
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 
 
 def _format_segment_text(segments) -> str:
-    lines = [segment.text.strip() for segment in segments if segment.text.strip()]
+    lines = []
+    for segment in segments:
+        text = segment.text.strip()
+        if not text:
+            continue
+        text = to_simplified_chinese(text)
+        lines.append(f"[{_format_timestamp(segment.start)}] {text}")
     return "\n\n".join(lines)
 
 
 def transcribe_media_file(
     media_path: str,
-    model_name: str = "base",
+    model_name: str = "medium",
     language: str | None = None,
 ) -> str | None:
-    """Transcribe an audio or video file and return plain text."""
+    """Transcribe an audio or video file and return timestamped plain text."""
     media_path = media_path.replace("\\", "/")
     if not os.path.exists(media_path) or os.path.getsize(media_path) == 0:
         logger.warning(f"Skip speech-to-text, file missing or empty: {media_path}")
@@ -149,8 +190,6 @@ def transcribe_media_file(
             vad_filter=True,
         )
         text = _format_segment_text(segments)
-        if text:
-            text = to_simplified_chinese(text)
         return text or None
     except ImportError as e:
         logger.error(str(e))
@@ -172,7 +211,7 @@ def save_transcript(media_path: str, text: str) -> str:
 
 def transcribe_and_save(
     media_path: str,
-    model_name: str = "base",
+    model_name: str = "medium",
     language: str | None = None,
 ) -> str | None:
     text = transcribe_media_file(media_path, model_name=model_name, language=language)

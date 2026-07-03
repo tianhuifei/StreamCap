@@ -177,3 +177,7 @@ backup_config/
 ffmpeg.exe
 ffplay.exe
 ffprobe.exe
+
+# Speech-to-text model weights (download with app/scripts/download_whisper_model.py)
+models/whisper/*/
+!models/whisper/.gitkeep

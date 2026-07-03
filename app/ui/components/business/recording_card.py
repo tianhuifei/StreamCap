@@ -366,21 +366,24 @@ class RecordingCardManager:
         self.app.page.pubsub.send_others_on_topic("update", recording_dict)
 
     async def on_toggle_recording(self, recording: Recording):
-        """Toggle the recording state for a specific recording."""
+        """Toggle recording and monitoring together for a specific recording."""
         if recording and self.app.recording_enabled:
             if recording.is_recording:
-                self.app.record_manager.stop_recording(recording, manually_stopped=True)
+                if recording.monitor_status:
+                    await self.app.record_manager.stop_monitor_recording(recording)
+                else:
+                    self.app.record_manager.stop_recording(recording, manually_stopped=True)
                 await self.app.snack_bar.show_snack_bar(self._["stop_record_tip"])
             else:
-                if recording.monitor_status:
+                if not recording.monitor_status:
+                    await self.app.record_manager.start_monitor_recording(recording)
+                    await self.app.snack_bar.show_snack_bar(self._["start_monitor_tip"], bgcolor=ft.Colors.GREEN)
+                else:
                     await self.app.record_manager.check_if_live(recording)
                     if recording.is_live:
-                        self.app.record_manager.start_update(recording)
                         await self.app.snack_bar.show_snack_bar(self._["pre_record_tip"], bgcolor=ft.Colors.PRIMARY)
                     else:
                         await self.app.snack_bar.show_snack_bar(self._["is_not_live_tip"])
-                else:
-                    await self.app.snack_bar.show_snack_bar(self._["please_start_monitor_tip"])
 
             await self.update_card(recording)
             self.app.page.pubsub.send_others_on_topic("update", recording)
