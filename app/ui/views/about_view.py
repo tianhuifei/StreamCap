@@ -174,45 +174,45 @@ class AboutPage(PageBase):
                 spacing=100,
             )
 
-        if is_mobile:
-            developer_buttons = ft.Column(
-                controls=[
-                    ft.Button(
-                        content=self._["view_update"],
-                        icon=ft.Icons.CODE,
-                        on_click=self.open_update_page,
-                        width=float("inf"),
-                        style=ft.ButtonStyle(
-                            shape=ft.RoundedRectangleBorder(radius=8),
-                            padding=10,
-                        ),
-                    ),
-                    ft.Button(
-                        content=self._["view_docs"],
-                        icon=ft.Icons.DESCRIPTION,
-                        on_click=self.open_dos_page,
-                        width=float("inf"),
-                        style=ft.ButtonStyle(
-                            shape=ft.RoundedRectangleBorder(radius=8),
-                            padding=10,
-                        ),
-                    ),
-                    ft.Button(
-                        content=self.app.language_manager.language.get("update", {}).get("check_update"),
-                        icon=ft.Icons.UPDATE,
-                        on_click=self._check_for_updates,
-                        width=float("inf"),
-                        style=ft.ButtonStyle(
-                            shape=ft.RoundedRectangleBorder(radius=8),
-                            padding=10,
-                        ),
-                    ),
-                ],
-                spacing=10,
-                alignment=ft.MainAxisAlignment.CENTER,
-                width=float("inf"),
-            )
-        else:
+        # if is_mobile:
+        #     developer_buttons = ft.Column(
+        #         controls=[
+        #             ft.Button(
+        #                 content=self._["view_update"],
+        #                 icon=ft.Icons.CODE,
+        #                 on_click=self.open_update_page,
+        #                 width=float("inf"),
+        #                 style=ft.ButtonStyle(
+        #                     shape=ft.RoundedRectangleBorder(radius=8),
+        #                     padding=10,
+        #                 ),
+        #             ),
+        #             ft.Button(
+        #                 content=self._["view_docs"],
+        #                 icon=ft.Icons.DESCRIPTION,
+        #                 on_click=self.open_dos_page,
+        #                 width=float("inf"),
+        #                 style=ft.ButtonStyle(
+        #                     shape=ft.RoundedRectangleBorder(radius=8),
+        #                     padding=10,
+        #                 ),
+        #             ),
+        #             ft.Button(
+        #                 content=self.app.language_manager.language.get("update", {}).get("check_update"),
+        #                 icon=ft.Icons.UPDATE,
+        #                 on_click=self._check_for_updates,
+        #                 width=float("inf"),
+        #                 style=ft.ButtonStyle(
+        #                     shape=ft.RoundedRectangleBorder(radius=8),
+        #                     padding=10,
+        #                 ),
+        #             ),
+        #         ],
+        #         spacing=10,
+        #         alignment=ft.MainAxisAlignment.CENTER,
+        #         width=float("inf"),
+        #     )
+        # else:
             developer_buttons = ft.Row(
                 controls=[
                     ft.TextButton(
@@ -302,31 +302,31 @@ class AboutPage(PageBase):
                         ),
                     ),
                     # Developer Information Card
-                    ft.Container(
-                        content=ft.Column(
-                            controls=[
-                                ft.Text(self._["developer"], size=20, weight=ft.FontWeight.W_600, color=text_color),
-                                ft.ListTile(
-                                    leading=ft.Icon(ft.Icons.PERSON, color=ft.Colors.GREY_800),
-                                    title=ft.Text("Hmily", size=18, weight=ft.FontWeight.W_500, color=text_color_700),
-                                    subtitle=ft.Text(self._["author"], size=14, color=text_color_500),
-                                ),
-                                developer_buttons,
-                            ],
-                            spacing=10,
-                            expand=True,
-                        ),
-                        padding=20,
-                        margin=10,
-                        bgcolor=card_bg_color,
-                        border_radius=15,
-                        shadow=ft.BoxShadow(
-                            spread_radius=1,
-                            blur_radius=10,
-                            color=ft.Colors.BLACK26,
-                            offset=ft.Offset(0, 4),
-                        ),
-                    ),
+                    # ft.Container(
+                    #     content=ft.Column(
+                    #         controls=[
+                    #             ft.Text(self._["developer"], size=20, weight=ft.FontWeight.W_600, color=text_color),
+                    #             ft.ListTile(
+                    #                 leading=ft.Icon(ft.Icons.PERSON, color=ft.Colors.GREY_800),
+                    #                 title=ft.Text("Hmily", size=18, weight=ft.FontWeight.W_500, color=text_color_700),
+                    #                 subtitle=ft.Text(self._["author"], size=14, color=text_color_500),
+                    #             ),
+                    #             developer_buttons,
+                    #         ],
+                    #         spacing=10,
+                    #         expand=True,
+                    #     ),
+                    #     padding=20,
+                    #     margin=10,
+                    #     bgcolor=card_bg_color,
+                    #     border_radius=15,
+                    #     shadow=ft.BoxShadow(
+                    #         spread_radius=1,
+                    #         blur_radius=10,
+                    #         color=ft.Colors.BLACK26,
+                    #         offset=ft.Offset(0, 4),
+                    #     ),
+                    # ),
                     # Version update content card
                     ft.Container(
                         content=ft.Column(
