@@ -5,6 +5,7 @@ from pathlib import Path
 
 APP_NAME = "StreamCap"
 EXECUTABLE_SUFFIX = ".exe" if sys.platform == "win32" else ""
+BUNDLED_WHISPER_MODELS = ("medium",)
 
 
 def _executable_dir() -> Path:
@@ -60,6 +61,7 @@ def prepare_user_data_dir() -> None:
 
     prepare_bundled_ffmpeg()
     prepare_bundled_node()
+    prepare_bundled_whisper_models()
 
 
 def prepare_bundled_ffmpeg() -> None:
@@ -90,6 +92,20 @@ def prepare_bundled_node() -> None:
     shutil.copy2(source_executable, target_executable)
     if sys.platform != "win32":
         target_executable.chmod(target_executable.stat().st_mode | 0o755)
+
+
+def prepare_bundled_whisper_models() -> None:
+    for model_name in BUNDLED_WHISPER_MODELS:
+        source_dir = resource_dir / "models" / "whisper" / model_name
+        target_dir = user_data_dir / "models" / "whisper" / model_name
+        source_model = source_dir / "model.bin"
+        target_model = target_dir / "model.bin"
+        if not source_model.is_file() or target_model.is_file():
+            continue
+        if target_dir.exists():
+            shutil.rmtree(target_dir)
+        target_dir.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(source_dir, target_dir)
 
 
 def prepend_user_bin_dirs() -> None:

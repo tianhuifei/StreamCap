@@ -24,6 +24,7 @@ python scripts/build.py
 - 打包 `config`、`locales`、`assets`。
 - 打包 `streamget` 的数据文件。
 - 如果存在内置 FFmpeg / Node.js，则一起打包。
+- 如果存在本地 Whisper 模型（`medium`），则一起打包。
 - macOS 下隐藏外层 PyInstaller Dock 图标，只显示一个 StreamCap 熊猫图标。
 
 macOS 打包完成后产物为：
@@ -154,6 +155,40 @@ macOS:   ~/Library/Application Support/StreamCap/node/node
 Windows: %APPDATA%\StreamCap\node\node.exe
 ```
 
+## 内置 Whisper 语音转文字模型
+
+如果希望打包时携带语音转文字模型，先下载 `medium`：
+
+```bash
+python app/scripts/download_whisper_model.py medium
+```
+
+文件会保存到：
+
+```text
+models/whisper/medium/
+```
+
+打包时 `scripts/build.py` 会自动检测这些目录；存在则打进包里。若不想打包 Whisper 模型：
+
+```bash
+python scripts/build.py --no-bundle-whisper
+```
+
+运行时逻辑：
+
+- 首次启动时，将包内模型复制到用户数据目录。
+- 如果目标目录已有同名模型，则不会覆盖。
+
+目标位置：
+
+```text
+macOS:   ~/Library/Application Support/StreamCap/models/whisper/<model>/
+Windows: %APPDATA%\StreamCap\models\whisper\<model>\
+```
+
+`medium` 模型约 1.4 GB，会显著增加安装包体积。
+
 ## macOS Flet 说明
 
 StreamCap 使用 Flet 桌面模式。macOS 下 Flet 会使用 `Flet.app` 作为真正的窗口进程。
@@ -182,7 +217,7 @@ open dist/StreamCap.app
 
 ## 用户数据目录
 
-打包运行时，配置、日志、FFmpeg、Node.js 等可变数据不会写入应用包或安装目录。
+打包运行时，配置、日志、FFmpeg、Node.js、Whisper 模型等可变数据不会写入应用包或安装目录。
 
 位置：
 
@@ -202,6 +237,7 @@ Windows 默认录制保存目录为 `StreamCap.exe` 同级目录下的 `download
 ```bash
 python scripts/download_ffmpeg.py --platform all
 python scripts/download_nodejs.py --platform all
+python app/scripts/download_whisper_model.py medium
 ```
 
 打包：
@@ -216,8 +252,8 @@ python scripts/build.py
 python scripts/build.py --refresh-flet
 ```
 
-只打包应用，不内置 FFmpeg / Node.js：
+只打包应用，不内置 FFmpeg / Node.js / Whisper 模型：
 
 ```bash
-python scripts/build.py --no-bundle-ffmpeg --no-bundle-node
+python scripts/build.py --no-bundle-ffmpeg --no-bundle-node --no-bundle-whisper
 ```

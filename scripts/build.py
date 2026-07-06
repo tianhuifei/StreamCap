@@ -14,6 +14,8 @@ APP_NAME = "StreamCap"
 ROOT = Path(__file__).resolve().parents[1]
 FLET_ARCHIVE_DIR = ROOT / "build" / "flet_desktop_app"
 VENDOR_DIR = ROOT / "vendor"
+WHISPER_MODELS_DIR = ROOT / "models" / "whisper"
+BUNDLED_WHISPER_MODELS = ("medium",)
 
 
 def detect_target_platform() -> str:
@@ -86,6 +88,10 @@ def bundled_node_source(target_platform: str) -> Path:
     raise ValueError(target_platform)
 
 
+def bundled_whisper_model_source(model_name: str) -> Path:
+    return WHISPER_MODELS_DIR / model_name
+
+
 def pyinstaller_command(args: argparse.Namespace, target_platform: str) -> list[str]:
     contents_directory = "_internal" if target_platform == "windows" else "."
     command = [
@@ -128,6 +134,19 @@ def pyinstaller_command(args: argparse.Namespace, target_platform: str) -> list[
         command.extend(["--add-data", add_data_arg(str(node_source), "node", target_platform)])
     elif args.bundle_node:
         print(f"Bundled Node.js not found, skipping: {node_source}")
+
+    if args.bundle_whisper:
+        for model_name in BUNDLED_WHISPER_MODELS:
+            model_source = bundled_whisper_model_source(model_name)
+            if (model_source / "model.bin").is_file():
+                command.extend(
+                    [
+                        "--add-data",
+                        add_data_arg(str(model_source), f"models/whisper/{model_name}", target_platform),
+                    ]
+                )
+            else:
+                print(f"Bundled Whisper model not found, skipping: {model_source}")
 
     if args.clean:
         command.append("--clean")
@@ -214,8 +233,14 @@ def parse_args() -> argparse.Namespace:
         action="store_false",
         help="Do not bundle vendor Node.js even if present.",
     )
+    parser.add_argument(
+        "--no-bundle-whisper",
+        dest="bundle_whisper",
+        action="store_false",
+        help="Do not bundle local Whisper models even if present.",
+    )
     parser.add_argument("--no-clean", dest="clean", action="store_false", help="Do not pass --clean to PyInstaller.")
-    parser.set_defaults(bundle_ffmpeg=True, bundle_node=True, clean=True)
+    parser.set_defaults(bundle_ffmpeg=True, bundle_node=True, bundle_whisper=True, clean=True)
     return parser.parse_args()
 
 

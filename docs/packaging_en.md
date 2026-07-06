@@ -24,6 +24,7 @@ The script automatically:
 - Bundles `config`, `locales`, and `assets`.
 - Bundles `streamget` data files.
 - Bundles optional FFmpeg / Node.js executables when present.
+- Bundles the local Whisper `medium` model when present.
 - On macOS, hides the outer PyInstaller Dock icon so only one StreamCap panda icon is shown.
 
 macOS output:
@@ -154,6 +155,40 @@ macOS:   ~/Library/Application Support/StreamCap/node/node
 Windows: %APPDATA%\StreamCap\node\node.exe
 ```
 
+## Bundled Whisper Speech-to-Text Models
+
+To bundle the speech-to-text model, download `medium` first:
+
+```bash
+python app/scripts/download_whisper_model.py medium
+```
+
+Files are saved to:
+
+```text
+models/whisper/medium/
+```
+
+`scripts/build.py` automatically bundles these directories when they exist. To skip bundled Whisper models:
+
+```bash
+python scripts/build.py --no-bundle-whisper
+```
+
+Runtime behavior:
+
+- On first launch, bundled models are copied to the user data directory.
+- Existing models in the user data directory are not overwritten.
+
+Destination:
+
+```text
+macOS:   ~/Library/Application Support/StreamCap/models/whisper/<model>/
+Windows: %APPDATA%\StreamCap\models\whisper\<model>\
+```
+
+The `medium` model is about 1.4 GB and will significantly increase the package size.
+
 ## macOS Flet Notes
 
 StreamCap uses Flet desktop mode. On macOS, Flet uses `Flet.app` as the actual window process.
@@ -182,7 +217,7 @@ open dist/StreamCap.app
 
 ## User Data Directory
 
-In packaged builds, mutable files such as config, logs, FFmpeg, and Node.js are not written into the app bundle or installation directory.
+In packaged builds, mutable files such as config, logs, FFmpeg, Node.js, and Whisper models are not written into the app bundle or installation directory.
 
 Locations:
 
@@ -202,6 +237,7 @@ Prepare optional bundled dependencies:
 ```bash
 python scripts/download_ffmpeg.py --platform all
 python scripts/download_nodejs.py --platform all
+python app/scripts/download_whisper_model.py medium
 ```
 
 Build:
@@ -216,8 +252,8 @@ Force re-download of the Flet desktop runtime archive:
 python scripts/build.py --refresh-flet
 ```
 
-Build without bundled FFmpeg / Node.js:
+Build without bundled FFmpeg / Node.js / Whisper models:
 
 ```bash
-python scripts/build.py --no-bundle-ffmpeg --no-bundle-node
+python scripts/build.py --no-bundle-ffmpeg --no-bundle-node --no-bundle-whisper
 ```

@@ -52,6 +52,9 @@ jobs:
       - name: Prepare bundled Node.js
         run: python scripts/download_nodejs.py --platform windows --windows-arch x64
 
+      - name: Prepare bundled Whisper model
+        run: python app/scripts/download_whisper_model.py medium
+
       - name: Build app
         run: |
           $buildArgs = @("--platform", "windows")
@@ -94,6 +97,9 @@ jobs:
 
       - name: Prepare bundled Node.js
         run: python scripts/download_nodejs.py --platform macos
+
+      - name: Prepare bundled Whisper model
+        run: python app/scripts/download_whisper_model.py medium
 
       - name: Build app
         run: |
