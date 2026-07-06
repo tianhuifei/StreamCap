@@ -15,6 +15,8 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.core.runtime.paths import default_recordings_dir
+
 dotenv_path = find_dotenv()
 load_dotenv(dotenv_path)
 CUSTOM_VIDEO_ROOT_DIR = os.getenv("CUSTOM_VIDEO_ROOT_DIR")
@@ -23,7 +25,7 @@ VIDEO_API_PORT = os.getenv("VIDEO_API_PORT") or 6007
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DEFAULT_VIDEO_ROOT_DIR = Path(os.path.split(os.path.realpath(sys.argv[0]))[0]).parent.parent / "downloads"
+DEFAULT_VIDEO_ROOT_DIR = default_recordings_dir
 VIDEO_DIR = Path(CUSTOM_VIDEO_ROOT_DIR or DEFAULT_VIDEO_ROOT_DIR)
 os.makedirs(VIDEO_DIR, exist_ok=True)
 

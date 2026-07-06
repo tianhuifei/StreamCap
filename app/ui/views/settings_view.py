@@ -1,8 +1,8 @@
 import asyncio
-import os
 
 import flet as ft
 
+from ...core.runtime.paths import default_recordings_dir
 from ...models.media.audio_format_model import AudioFormat
 from ...models.media.video_format_model import VideoFormat
 from ...models.media.video_quality_model import VideoQuality
@@ -223,7 +223,7 @@ class SettingsPage(PageBase):
     def get_video_save_path(self):
         live_save_path = self.get_config_value("live_save_path")
         if not live_save_path:
-            live_save_path = os.path.join(self.app.run_path, "downloads")
+            live_save_path = str(default_recordings_dir)
         return live_save_path
 
     @staticmethod
@@ -1247,7 +1247,16 @@ class SettingsPage(PageBase):
                 await self.app.snack_bar.show_snack_bar(self._["unsupported_select_path"])
                 return
             folder_picker = ft.FilePicker()
-            path = await folder_picker.get_directory_path()
+            try:
+                path = await folder_picker.get_directory_path()
+            except RuntimeError as exc:
+                logger.error(f"Failed to open folder picker: {exc}")
+                await self.app.snack_bar.show_snack_bar(
+                    self._["select_path_failed"],
+                    bgcolor=ft.Colors.RED,
+                    duration=3000,
+                )
+                return
             if path:
                 control.value = path
                 control.update()

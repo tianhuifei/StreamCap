@@ -10,7 +10,8 @@ from screeninfo import get_monitors
 from app.app_manager import App, execute_dir
 from app.auth.auth_manager import AuthManager
 from app.core.runtime.backend_services import BackendServices
-from app.core.runtime.bundled_env import setup_bundled_flet_view
+from app.core.runtime.bundled_env import patch_macos_flet_launcher, setup_bundled_flet_view
+from app.core.runtime.paths import prepend_user_bin_dirs, resource_dir
 from app.lifecycle.app_close_handler import handle_app_close
 from app.lifecycle.tray_manager import TrayManager
 from app.ui.components.common.save_progress_overlay import SaveProgressOverlay
@@ -26,7 +27,7 @@ ASSETS_DIR = "assets"
 
 
 async def setup_window(page: ft.Page, app: App) -> None:
-    page.window.icon = os.path.join(execute_dir, ASSETS_DIR, "icon.ico")
+    page.window.icon = os.path.join(resource_dir, ASSETS_DIR, "icon.ico")
     page.window.skip_task_bar = False
     page.window.always_on_top = False
     page.focused = True
@@ -217,18 +218,20 @@ async def main(page: ft.Page) -> None:
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
+
     load_dotenv()
     platform = os.getenv("PLATFORM")
     default_host = os.getenv("HOST", DEFAULT_HOST)
     default_port = int(os.getenv("PORT", DEFAULT_PORT))
+    assets_dir = os.path.join(resource_dir, ASSETS_DIR)
+    prepend_user_bin_dirs()
 
     parser = argparse.ArgumentParser(description="Run the Flet app with optional web mode.")
     parser.add_argument("--web", action="store_true", help="Run the app in web mode")
     parser.add_argument("--host", type=str, default=default_host, help=f"Host address (default: {default_host})")
     parser.add_argument("--port", type=int, default=default_port, help=f"Port number (default: {default_port})")
     args = parser.parse_args()
-
-    multiprocessing.freeze_support()
 
     services = BackendServices.bootstrap(execute_dir)
 
@@ -241,10 +244,11 @@ if __name__ == "__main__":
             view=ft.AppView.WEB_BROWSER,
             host=args.host,
             port=args.port,
-            assets_dir=ASSETS_DIR,
+            assets_dir=assets_dir,
             web_renderer=ft.WebRenderer.CANVAS_KIT,
             no_cdn=True,
         )
     else:
         setup_bundled_flet_view()
-        ft.run(main=main, view=ft.AppView.FLET_APP_HIDDEN, assets_dir=ASSETS_DIR)
+        patch_macos_flet_launcher()
+        ft.run(main=main, view=ft.AppView.FLET_APP_HIDDEN, assets_dir=assets_dir)
