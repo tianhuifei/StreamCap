@@ -180,6 +180,8 @@ Runtime behavior:
 - On first launch, bundled models are copied to the user data directory.
 - Existing models in the user data directory are not overwritten.
 
+Model copying runs in a background thread and does not block app startup. The first speech-to-text run waits for the copy to finish (up to about 10 minutes).
+
 Destination:
 
 ```text

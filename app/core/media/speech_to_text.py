@@ -3,10 +3,8 @@ import subprocess
 import tempfile
 from functools import lru_cache
 
-from ... import execute_dir
+from ...core.runtime.paths import ensure_whisper_model_ready, whisper_model_is_ready
 from ...utils.logger import logger
-
-WHISPER_MODELS_DIR = os.path.join(execute_dir, "models", "whisper")
 
 AUDIO_EXTENSIONS = {".mp3", ".wav", ".m4a", ".aac", ".wma", ".flac", ".ogg"}
 MEDIA_EXTENSIONS = AUDIO_EXTENSIONS | {".mp4", ".ts", ".mkv", ".mov", ".flv", ".nut"}
@@ -116,13 +114,10 @@ def _get_whisper_device_config() -> tuple[str, str]:
 
 
 def _get_local_whisper_model_path(model_name: str) -> str:
-    local_model_dir = os.path.join(WHISPER_MODELS_DIR, model_name)
-    if not os.path.isfile(os.path.join(local_model_dir, "model.bin")):
-        raise FileNotFoundError(
-            f"Local speech-to-text model not found: {local_model_dir}. "
-            f"Download it with: python app/scripts/download_whisper_model.py {model_name}"
-        )
-    return local_model_dir
+    if not whisper_model_is_ready(model_name):
+        logger.info(f"Preparing speech-to-text model in background: {model_name}")
+    model_dir = ensure_whisper_model_ready(model_name)
+    return str(model_dir)
 
 
 @lru_cache(maxsize=4)

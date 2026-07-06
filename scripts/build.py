@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FLET_ARCHIVE_DIR = ROOT / "build" / "flet_desktop_app"
 VENDOR_DIR = ROOT / "vendor"
 WHISPER_MODELS_DIR = ROOT / "models" / "whisper"
-BUNDLED_WHISPER_MODELS = ("medium",)
+BUNDLED_WHISPER_MODELS = ("medium",)  # keep in sync with app/core/runtime/paths.py
 
 
 def detect_target_platform() -> str:
@@ -119,6 +119,12 @@ def pyinstaller_command(args: argparse.Namespace, target_platform: str) -> list[
         "--hidden-import",
         "ctranslate2",
         "--hidden-import",
+        "av",
+        "--hidden-import",
+        "tokenizers",
+        "--hidden-import",
+        "opencc",
+        "--collect-data",
         "opencc",
         "--collect-data",
         "streamget",
